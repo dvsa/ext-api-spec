@@ -1,0 +1,269 @@
+openapi: 3.0.0
+info:
+  description: EXT API
+  version: 1.0.0
+  title: 'External API'
+  termsOfService: ''
+  contact:
+    email: 'ujaffer@deloitte.co.uk'
+  license:
+    name: 'Apache 2.0'
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: 'external-apis'
+    description: 'Endpoints for all external entities.'
+paths:
+  /tfl-lec-test-results:
+    get:
+      tags:
+        - 'lec'
+      summary: 'Returns an array of Low emission certificate test results'
+      description: 'Returns low emission certificates for the current day.'
+      responses:
+        200:
+          description: 'LECs returned for current day'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lecTestResults'
+  /dva-trailer-details/{trailerId}:
+    get:
+      parameters: 
+        - in: path
+          name: trailerId
+          required: true
+          schema:
+            type: string
+          description: 'trailer id'
+      tags:
+        - 'trailer-details'
+      summary: 'Returns a single trailer.'
+      description: 'Returns a trailer for the provided Id.'
+      responses:
+        200:
+          description: 'a trailer based on the provided trailerId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trailerDetail'
+  /evl-test-certificates:
+    get:
+      tags:
+        - 'test-certificates'
+      summary: 'Returns an array of valid test certificates.'
+      description: 'Returns valid test certificates of HGV/PSVs for the current day.'
+      responses:
+        200:
+          description: 'Certificates returned based on search filter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/testCertificates'
+  /dvla-ants:
+    get:
+      tags:
+        - 'ants'
+      summary: 'Returns an array of vehicle plating weight particulars'
+      description: 'Returns an array of vehicle plating weight particulars based on time period.'
+      parameters:
+        - in: 'query'
+          name: 'startDate'
+          schema:
+            type: 'string'
+          description: 'tests recorded from this time onwards'
+        - in: 'query'
+          name: 'endDate'
+          schema:
+            type: 'string'
+          description: 'tests recorded to this date'
+      responses:
+        200:
+          description: 'array of vehiclePlatingWeightInfo'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/vehiclePlatingWeightInfos'
+components:
+  schemas:
+     lecTestResults:
+      type: array
+      items:
+        $ref: '#/components/schemas/lecTestResult'
+     lecTestResult:
+      type: object
+      properties:
+        currentRegMark:
+          type: string
+          description: 'Current Registration Mark'
+        vin:
+          type: string
+          description: 'Vehicle Identification Number'
+        certificateSerialNumber:
+          type: string
+          description: 'Certificate Serial Number'
+          maxLength: 8
+        modType:
+          type: string
+          description: 'Certification Modification Type.''P'' if test is failed'
+          maxLength: 1
+          enum: [G,M,P]
+        testStatus:
+          type: number
+          description: '1 for pass and 2 for fail'
+          maxLength: 1
+        emissionCode:
+          type: number
+          description: 'Emission Classification Code'
+          maxLength: 2
+          enum: [4,5,9,10,12]
+        validFromDate:
+          type: string
+          description: 'Date from which the certificate is valid'
+        certificateExpiryDate:
+          type: string
+          description: 'Expiry date of the certificate. It would be +21 days of certificateIssueDate in case of failed test.'
+        certificateIssueDate:
+          type: string
+          description: 'Date on which the certificate was issued.'
+        stationId:
+          type: string
+          maxLength: 6
+          description: 'Id of the station performing the test'
+     trailerDetail:
+      type: object
+      properties:
+        trailerId:
+          type: string
+          description: 'trailer Id'
+        make:
+          type: string
+          description: 'Make of the vehicle'
+        vin:
+          type: string
+          description: 'Model of the vehicle'
+        manufactureDate:
+          type: string
+          description: 'manufacture date'
+        bodyType:
+          type: string
+          description: 'body type'
+        authDate:
+          type: string
+          description: 'auth date'
+        axles:
+          type: string
+          description: 'axles'
+        region:
+          type: string
+          description: 'region'
+     testCertificates:
+      type: array
+      items:
+        $ref: '#/components/schemas/testCertificate'
+     testCertificate:
+      type: object
+      properties:
+        currentRegMark:
+          type: string
+          description: 'Current Registration Mark'
+        certificateSerialNumber:
+          type: string
+          description: 'Certificate Serial Number'
+          maxLength: 8
+        certificateExpiryDate:
+          type: string
+          description: 'Expiry date of the certificate.'
+     vehiclePlatingWeightInfos:
+      type: array
+      items:
+        $ref: '#/components/schemas/vehiclePlatingWeightInfo'
+     vehiclePlatingWeightInfo:
+      type: object
+      properties:
+        vechileId:
+          type: string
+          description: 'vheicle Id'
+        make:
+          type: string
+          description: 'Make of the vehicle'
+        model:
+          type: string
+          description: 'Model of the vehicle'
+        wheelPlan:
+          type: string
+          description: 'Type axle'
+        grossWeight:
+          type: number
+          description: '1 for pass and 2 for fail'
+          maxLength: 1
+        doeReference:
+          type: string
+          description: 'DOE Reference'
+        platingDate:
+          type: string
+          description: 'Date when the plating was modified'
+     empty:
+      type: object
+  securitySchemes:
+    TfL-Auth:
+      type: "apiKey"
+      name: "Authorization"
+      in: "header"
+      x-amazon-apigateway-authtype: "custom"
+      x-amazon-apigateway-authorizer:
+        authorizerUri: ""
+        authorizerCredentials: ""
+        authorizerResultTtlInSeconds: 0
+        type: "token"
+    DVLA-Auth:
+      type: "apiKey"
+      name: "Authorization"
+      in: "header"
+      x-amazon-apigateway-authtype: "custom"
+      x-amazon-apigateway-authorizer:
+        authorizerUri: ""
+        authorizerCredentials: ""
+        authorizerResultTtlInSeconds: 0
+        type: "token"
+    DVA-Auth:
+      type: "apiKey"
+      name: "Authorization"
+      in: "header"
+      x-amazon-apigateway-authtype: "custom"
+      x-amazon-apigateway-authorizer:
+        authorizerUri: ""
+        authorizerCredentials: ""
+        authorizerResultTtlInSeconds: 0
+        type: "token"
+  responses:
+    Opt200:
+      description: "200 response"
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: "string"
+        Access-Control-Allow-Methods:
+          schema:
+            type: "string"
+        Access-Control-Allow-Headers:
+          schema:
+            type: "string"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/empty"
+x-amazon-apigateway-gateway-responses:
+  ACCESS_DENIED:
+    statusCode: 403
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+    responseTemplates:
+      application/json: "{\"message\":$context.error.messageString}"
+  UNAUTHORIZED:
+    statusCode: 401
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+    responseTemplates:
+      application/json: "{\"message\":$context.error.messageString}"
+servers:
+  - url: 'https://url/api/v1'
